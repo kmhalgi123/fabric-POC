@@ -1,0 +1,269 @@
+version: '3.5'
+
+networks:
+  my-network-name:
+    name: OrderNet
+
+services:
+  ca.buyer.example.com:
+    image: hyperledger/fabric-ca:latest
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.buyer.example.com
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=host
+      # - FABRIC_CA_SERVER_TLS_ENABLED=true
+      # - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.buyer.example.com-cert.pem
+      # - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/43d20268cd5f82dd825acd701a70cda9b58a096f10bc172833ef693a58a3c376_sk
+
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.buyer.example.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/${sk} -b admin:adminpw -d'
+    volumes:
+      - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca.buyer.example.com
+    networks:
+      - my-network-name
+  
+  # orderer.example.com:
+  #   container_name: orderer.example.com
+  #   image: hyperledger/fabric-orderer:1.4.1
+  #   environment:
+  #     - ORDERER_GENERAL_LOGLEVEL=debug
+  #     - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+  #     - ORDERER_GENERAL_GENESISMETHOD=file
+  #     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/composer-genesis.block
+  #     - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+  #     - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer/msp
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #     # enabled TLS
+  #     # - ORDERER_GENERAL_TLS_ENABLED=true
+  #     # - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/orderer/tls/server.key
+  #     # - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/orderer/tls/server.crt
+  #     # - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/orderer/tls/ca.crt]
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+  #   command: orderer
+  #   ports:
+  #     - 7050:7050
+  #   volumes:
+  #       - ../artifacts/:/etc/hyperledger/configtx
+  #       - ../artifacts/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/etc/hyperledger/msp/orderer/msp
+  #       - ../artifacts/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/orderer/tls
+  #   networks:
+  #     - my-network-name    
+
+  peer0.buyer.example.com:
+    container_name: peer0.buyer.example.com
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=critical
+      - CORE_CHAINCODE_LOGGING_LEVEL=CRITICAL
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.buyer.example.com
+      - CORE_PEER_ADDRESS=peer0.buyer.example.com:7051
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+      - CORE_PEER_LOCALMSPID=BuyerMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      - 'CORE_PEER_GOSSIP_BOOTSTRAP=peer0.buyer.example.com:7051'
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.buyer.example.com:7051'
+      - 'CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052'
+      #Prometheus and StatsD
+      # - CORE_OPERATIONS_LISTENADDRESS=peer0.buyer.example.com:8125
+      # - CORE_METRICS_PROVIDER=statsd
+      # - CORE_METRICS_STATSD_ADDRESS=graphite:8125
+      # - CORE_METRICS_STATSD_NETWORK=udp
+      # - CORE_METRICS_STATSD_PREFIX=PEER_0
+      # Fabric Network TLS settings
+      # - CORE_PEER_TLS_ENABLED=true
+      # - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      # - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      # - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    ports:
+      - 7051:7051
+      - 7053:7053
+      - 8125:8125
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../artifacts/:/etc/hyperledger/configtx
+        - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/peers/peer0.buyer.example.com/msp:/etc/hyperledger/peer/msp
+        - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/users:/etc/hyperledger/msp/users
+        - ../artifacts/crypto-config/ordererOrganizations/example.com/tlsca/:/etc/hyperledger/rootca/
+        - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/peers/peer0.buyer.example.com/tls:/etc/hyperledger/fabric/tls
+    depends_on:
+      - couchdb
+      # - orderer0.example.com
+    extra_hosts:
+      - "orderer0.example.com:${ip}"
+      - "orderer1.example.com:${ip}"
+      - "orderer2.example.com:${ip}"
+    networks:
+      - my-network-name
+
+  peer1.buyer.example.com:
+    container_name: peer1.buyer.example.com
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=critical
+      - CORE_CHAINCODE_LOGGING_LEVEL=CRITICAL
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer1.buyer.example.com
+      - CORE_PEER_ADDRESS=peer1.buyer.example.com:7051
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+      - CORE_PEER_LOCALMSPID=BuyerMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+      - 'CORE_PEER_GOSSIP_BOOTSTRAP=peer0.buyer.example.com:7051'
+      - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.buyer.example.com:8051'
+      #Prometheus and StatsD
+      # - CORE_OPERATIONS_LISTENADDRESS=peer1.buyer.example.com:8125
+      # - CORE_METRICS_PROVIDER=statsd
+      # - CORE_METRICS_STATSD_ADDRESS=graphite:8125
+      # - CORE_METRICS_STATSD_NETWORK=udp
+      # - CORE_METRICS_STATSD_PREFIX=PEER_1
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: peer node start
+    ports:
+      - 8051:7051
+      - 8053:7053
+      - 9125:8125
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../artifacts/:/etc/hyperledger/configtx
+        - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/peers/peer1.buyer.example.com/msp:/etc/hyperledger/peer/msp
+        - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/users:/etc/hyperledger/msp/users
+        - ../artifacts/crypto-config/ordererOrganizations/example.com/tlsca/:/etc/hyperledger/rootca/
+    depends_on:
+      - couchdb
+      # - orderer0.example.com
+    extra_hosts:
+      - "orderer0.example.com:${ip}"
+      - "orderer1.example.com:${ip}"
+      - "orderer2.example.com:${ip}"
+    networks:
+      - my-network-name
+ 
+  # peer2.buyer.example.com:
+  #   container_name: peer2.buyer.example.com
+  #   image: hyperledger/fabric-peer:1.4.1
+  #   environment:
+  #     - FABRIC_LOGGING_SPEC=critical
+  #     - CORE_CHAINCODE_LOGGING_LEVEL=CRITICAL
+  #     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+  #     - CORE_PEER_ID=peer2.buyer.example.com
+  #     - CORE_PEER_ADDRESS=peer2.buyer.example.com:7051
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #     - CORE_PEER_LOCALMSPID=BuyerMSP
+  #     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+  #     - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+  #     - 'CORE_PEER_GOSSIP_BOOTSTRAP=peer0.buyer.example.com:7051'
+  #     - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.buyer.example.com:9051'
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+  #   command: peer node start
+  #   ports:
+  #     - 9051:7051
+  #     - 9053:7053
+  #   volumes:
+  #       - /var/run/:/host/var/run/
+  #       - ../artifacts/:/etc/hyperledger/configtx
+  #       - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/peers/peer2.buyer.example.com/msp:/etc/hyperledger/peer/msp
+  #       - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/users:/etc/hyperledger/msp/users
+  #       - ../artifacts/crypto-config/ordererOrganizations/example.com/tlsca/:/etc/hyperledger/rootca/
+  #   depends_on:
+  #     - couchdb
+  #   extra_hosts:
+  #     - "orderer0.example.com:${ip}"
+  #     - "orderer1.example.com:${ip}"
+  #     - "orderer2.example.com:${ip}"
+  #   networks:
+  #     - my-network-name
+  #     # - orderer.example.com
+
+  # peer3.buyer.example.com:
+  #   container_name: peer3.buyer.example.com
+  #   image: hyperledger/fabric-peer:1.4.1
+  #   environment:
+  #     - FABRIC_LOGGING_SPEC=critical
+  #     - CORE_CHAINCODE_LOGGING_LEVEL=CRITICAL
+  #     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+  #     - CORE_PEER_ID=peer3.buyer.example.com
+  #     - CORE_PEER_ADDRESS=peer3.buyer.example.com:7051
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #     - CORE_PEER_LOCALMSPID=buyerMSP
+  #     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+  #     - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+  #     - 'CORE_PEER_GOSSIP_BOOTSTRAP=peer0.buyer.example.com:7051'
+  #     - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer3.buyer.example.com:10051'
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+  #   command: peer node start
+  #   ports:
+  #     - 10051:7051
+  #     - 10053:7053
+  #   volumes:
+  #       - /var/run/:/host/var/run/
+  #       - ../artifacts/:/etc/hyperledger/configtx
+  #       - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/peers/peer3.buyer.example.com/msp:/etc/hyperledger/peer/msp
+  #       - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/users:/etc/hyperledger/msp/users
+  #       - ../artifacts/crypto-config/ordererOrganizations/example.com/tlsca/:/etc/hyperledger/rootca/
+  #   depends_on:
+  #     - couchdb
+  #     # - orderer.example.com
+  #   extra_hosts:
+  #     - "orderer0.example.com:${ip}"
+  #     - "orderer1.example.com:${ip}"
+  #     - "orderer2.example.com:${ip}"
+  #   networks:
+  #     - my-network-name
+
+  # peer4.buyer.example.com:
+  #   container_name: peer4.buyer.example.com
+  #   image: hyperledger/fabric-peer:1.4.1
+  #   environment:
+  #     - FABRIC_LOGGING_SPEC=critical
+  #     - CORE_CHAINCODE_LOGGING_LEVEL=CRITICAL
+  #     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+  #     - CORE_PEER_ID=peer4.buyer.example.com
+  #     - CORE_PEER_ADDRESS=peer4.buyer.example.com:7051
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #     - CORE_PEER_LOCALMSPID=buyerMSP
+  #     - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+  #     - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb:5984
+  #     - 'CORE_PEER_GOSSIP_BOOTSTRAP=peer0.buyer.example.com:7051'
+  #     - 'CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer4.buyer.example.com:11051'
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+  #   command: peer node start
+  #   ports:
+  #     - 11051:7051
+  #     - 11053:7053
+  #   volumes:
+  #       - /var/run/:/host/var/run/
+  #       - ../artifacts/:/etc/hyperledger/configtx
+  #       - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/peers/peer4.buyer.example.com/msp:/etc/hyperledger/peer/msp
+  #       - ../artifacts/crypto-config/peerOrganizations/buyer.example.com/users:/etc/hyperledger/msp/users
+  #       - ../artifacts/crypto-config/ordererOrganizations/example.com/tlsca/:/etc/hyperledger/rootca/
+  #   depends_on:
+  #     - couchdb
+  #     # - orderer.example.com
+  #   extra_hosts:
+  #     - "orderer0.example.com:${ip}"
+  #     - "orderer1.example.com:${ip}"
+  #     - "orderer2.example.com:${ip}"
+  #   networks:
+  #     - my-network-name
+
+
+  couchdb:
+    container_name: couchdb
+    image: hyperledger/fabric-couchdb:0.4.15
+    ports:
+      - 5984:5984
+    environment:
+      DB_URL: http://localhost:5984/member_db
+    networks:
+      - my-network-name
