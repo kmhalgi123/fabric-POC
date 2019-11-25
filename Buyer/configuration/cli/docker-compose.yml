@@ -1,0 +1,150 @@
+#
+# Copyright IBM Corp All Rights Reserved
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+version: '3.5'
+
+networks:
+  my-network-name:
+    name: OrderNet
+
+services:
+  cliBuyer0:
+    container_name: cliBuyer0
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.buyer.example.com:7051
+      - CORE_PEER_LOCALMSPID=BuyerMSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/buyer.example.com/users/Admin@buyer.example.com/msp
+      - CORE_CHAINCODE_KEEPALIVE=10
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./../../../Buyer:/opt/gopath/src/github.com/
+        - ./../../../artifacts/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+    networks:
+        - my-network-name
+    extra_hosts:
+      - "orderer0.example.com:${ip}"
+      - "orderer1.example.com:${ip}"
+      - "orderer2.example.com:${ip}"
+
+  cliBuyer1:
+    container_name: cliBuyer1
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer1.buyer.example.com:7051
+      - CORE_PEER_LOCALMSPID=BuyerMSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/buyer.example.com/users/Admin@buyer.example.com/msp
+      - CORE_CHAINCODE_KEEPALIVE=10
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - /var/run/:/host/var/run/
+        - ./../../../Buyer:/opt/gopath/src/github.com/
+        - ./../../../artifacts/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+    networks:
+        - my-network-name
+    extra_hosts:
+      - "orderer0.example.com:${ip}"
+      - "orderer1.example.com:${ip}"
+      - "orderer2.example.com:${ip}"
+  # clibuyer2:
+  #   container_name: cliUtility2
+  #   image: hyperledger/fabric-tools
+  #   tty: true
+  #   environment:
+  #     - GOPATH=/opt/gopath
+  #     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+  #     - FABRIC_LOGGING_SPEC=info
+  #     - CORE_PEER_ID=cli
+  #     - CORE_PEER_ADDRESS=peer2.utility.example.com:7051
+  #     - CORE_PEER_LOCALMSPID=UtilityMSP
+  #     - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/utility.example.com/users/Admin@utility.example.com/msp
+  #     - CORE_CHAINCODE_KEEPALIVE=10
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+  #   command: /bin/bash
+  #   volumes:
+  #       - /var/run/:/host/var/run/
+  #       - ./../../../Utility:/opt/gopath/src/github.com/
+  #       - ./../../../artifacts/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+  #   networks:
+  #       - my-network-name
+  #   extra_hosts:
+  #     - "orderer0.example.com:${ip}"
+  #     - "orderer1.example.com:${ip}"
+  #     - "orderer2.example.com:${ip}"
+
+  # cliUtility3:
+  #   container_name: cliUtility3
+  #   image: hyperledger/fabric-tools
+  #   tty: true
+  #   environment:
+  #     - GOPATH=/opt/gopath
+  #     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+  #     - FABRIC_LOGGING_SPEC=info
+  #     - CORE_PEER_ID=cli
+  #     - CORE_PEER_ADDRESS=peer3.utility.example.com:7051
+  #     - CORE_PEER_LOCALMSPID=UtilityMSP
+  #     - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/utility.example.com/users/Admin@utility.example.com/msp
+  #     - CORE_CHAINCODE_KEEPALIVE=10
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+  #   command: /bin/bash
+  #   volumes:
+  #       - /var/run/:/host/var/run/
+  #       - ./../../../Utility:/opt/gopath/src/github.com/
+  #       - ./../../../artifacts/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+  #   networks:
+  #       - my-network-name
+  #   extra_hosts:
+  #     - "orderer0.example.com:${ip}"
+  #     - "orderer1.example.com:${ip}"
+  #     - "orderer2.example.com:${ip}"
+
+  # cliUtility4:
+  #   container_name: cliUtility4
+  #   image: hyperledger/fabric-tools
+  #   tty: true
+  #   environment:
+  #     - GOPATH=/opt/gopath
+  #     - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+  #     - FABRIC_LOGGING_SPEC=info
+  #     - CORE_PEER_ID=cli
+  #     - CORE_PEER_ADDRESS=peer4.utility.example.com:7051
+  #     - CORE_PEER_LOCALMSPID=UtilityMSP
+  #     - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/utility.example.com/users/Admin@utility.example.com/msp
+  #     - CORE_CHAINCODE_KEEPALIVE=10
+  #     - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=OrderNet
+  #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+  #   command: /bin/bash
+  #   volumes:
+  #       - /var/run/:/host/var/run/
+  #       - ./../../../Utility:/opt/gopath/src/github.com/
+  #       - ./../../../artifacts/crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+  #   networks:
+  #       - my-network-name
+  #   extra_hosts:
+  #     - "orderer0.example.com:${ip}"
+  #     - "orderer1.example.com:${ip}"
+  #     - "orderer2.example.com:${ip}"
+  #   #depends_on:
+  #   #  - orderer.example.com
+  #   #  - peer0.utility.example.com
+  #   #  - couchdb
+    

@@ -12,5 +12,11 @@ docker exec peer0.buyer.example.com peer channel create -o orderer0.example.com:
 
 echo "Sleeping for 5 seconds"
 sleep 5
-
-docker exec -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@buyer.example.com/msp" peer0.buyer.example.com peer channel fetch 0 -o orderer0.example.com:7050 -c samplechannel
+num=1
+for i in `seq 0 $num`
+do
+    echo "Buyer peer$i joining all channels"
+    docker exec -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@buyer.example.com/msp" peer$i.buyer.example.com peer channel fetch 0 -o orderer0.example.com:7050 -c samplechannel
+    #=================================================
+    docker exec -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@buyer.example.com/msp" peer$i.buyer.example.com peer channel join -b samplechannel_0.block
+done
