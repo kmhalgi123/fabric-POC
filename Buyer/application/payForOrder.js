@@ -51,7 +51,9 @@ async function main() {
         // issue commercial paper
         console.log('Submit commercial paper collect transaction.');
 
-        let results = await contract.submitTransaction('create','prod','user','order');
+        let results = await contract.submitTransaction('orderPurchased','order');
+        console.log(results);
+        
 
         console.log(Order.fromBuffer(results));
 

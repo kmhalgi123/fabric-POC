@@ -69,21 +69,21 @@ channels:
         # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
         # have the chaincode installed. The app can also use this property to decide which peers
         # to send the chaincode install request. Default: true
-        endorsingPeer: true
+        # endorsingPeer: true
 
-        # [Optional]. will this peer be sent query proposals? The peer must have the chaincode
-        # installed. The app can also use this property to decide which peers to send the
-        # chaincode install request. Default: true
-        chaincodeQuery: true
+        # # [Optional]. will this peer be sent query proposals? The peer must have the chaincode
+        # # installed. The app can also use this property to decide which peers to send the
+        # # chaincode install request. Default: true
+        # chaincodeQuery: true
 
-        # [Optional]. will this peer be sent query proposals that do not require chaincodes, like
-        # queryBlock(), queryTransaction(), etc. Default: true
-        ledgerQuery: true
+        # # [Optional]. will this peer be sent query proposals that do not require chaincodes, like
+        # # queryBlock(), queryTransaction(), etc. Default: true
+        # ledgerQuery: true
 
-        # [Optional]. will this peer be the target of the SDK's listener registration? All peers can
-        # produce events but the app typically only needs to connect to one to listen to events.
-        # Default: true
-        eventSource: true
+        # # [Optional]. will this peer be the target of the SDK's listener registration? All peers can
+        # # produce events but the app typically only needs to connect to one to listen to events.
+        # # Default: true
+        # eventSource: true
 # #----------------------------------------------------------------------------------------------------------->
 #       peer2.utility.example.com:
 #         # [Optional]. will this peer be sent transaction proposals for endorsement? The peer must
@@ -527,21 +527,21 @@ organizations:
 # #
 orderers:
   orderer0.example.com:
-    url: grpc://192.168.0.16:7050
+    url: grpc://10.218.110.38:7050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
     grpcOptions:
       ssl-target-name-override: orderer0.example.com
   orderer1.example.com:
-    url: grpc://192.168.0.16:8050
+    url: grpc://10.218.110.38:8050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
     grpcOptions:
       ssl-target-name-override: orderer1.example.com
   orderer2.example.com:
-    url: grpc://192.168.0.16:9050
+    url: grpc://10.218.110.38:9050
 
     # these are standard properties defined by the gRPC library
     # they will be passed in as-is to gRPC client constructor
@@ -555,15 +555,15 @@ orderers:
 peers:
   peer0.buyer.example.com:
     # this URL is used to send endorsement and query requests
-    url: grpc://192.168.0.16:7051
+    url: grpc://10.218.110.38:7051
 
     grpcOptions:
       ssl-target-name-override: peer0.buyer.example.com
       request-timeout: 300
 #-------------------------------------------------------------------------------------------->
-      peer1.buyer.example.com:
+  peer1.buyer.example.com:
     # this URL is used to send endorsement and query requests
-    url: grpc://192.168.0.16:8051
+    url: grpc://10.218.110.38:8051
 
 
     grpcOptions:
@@ -724,7 +724,7 @@ peers:
 #
 certificateAuthorities:
   ca-buyer:
-    url: http://192.168.0.16:7054
+    url: http://10.218.110.38:7054
     # the properties specified under this object are passed to the 'http' client verbatim when
     # making the request to the Fabric-CA server
     httpOptions:

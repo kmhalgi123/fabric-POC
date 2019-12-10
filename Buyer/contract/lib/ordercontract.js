@@ -13,7 +13,6 @@ const { Contract, Context } = require('fabric-contract-api');
 // PaperNet specifc classes
 const Order = require('./order.js');
 const OrderList = require('./orderlist.js');
-const currentState = require('./order.js')
 
 /**
  * A custom context provides easy access to list of all commercial papers
@@ -67,7 +66,8 @@ class OrderContract extends Contract {
     async create(ctx, product_id,user_id, order_id) {
 
         // create an instance of the paper
-        let order = Order.createInstance(product_id,user_id,order_id,currentState.CREATED);
+        // console.log(currentState)
+        let order = Order.createInstance(product_id,user_id,order_id,1);
 
         // Smart contract, rather than paper, moves paper into ISSUED state
         // paper.setIssued();
@@ -119,7 +119,7 @@ class OrderContract extends Contract {
         let order = await ctx.orderList.getOrder(orderKey);
         //account.ebalance = account.ebalance + parseFloat(change);
         order.setCancelled();
-        await ctx.orderList.updateOrder(order);
+        await ctx.orderList.cancelOrder(order);
         return order.toBuffer();
        
    }
@@ -136,7 +136,7 @@ class OrderContract extends Contract {
         let order = await ctx.orderList.getOrder(orderKey);
         //account.ebalance = account.ebalance + parseFloat(change);
         order.setPurchased();
-        await ctx.orderList.updateOrder(order);
+        await ctx.orderList.purchaseOrder(order);
         return order.toBuffer();
     
     }
@@ -151,7 +151,7 @@ class OrderContract extends Contract {
         let order = await ctx.orderList.getOrder(orderKey);
         //account.ebalance = account.ebalance + parseFloat(change);
         order.setDelivered();
-        await ctx.orderList.updateOrder(order);
+        await ctx.orderList.deliverOrder(order);
         return order.toBuffer();
 
     }
