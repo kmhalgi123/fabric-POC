@@ -169,8 +169,8 @@ class OrderContract extends Contract {
         //account.ebalance = account.ebalance + parseFloat(change);
         let user = order.getUser();
         let product = order.getProduct();
-        let newOrder = Order.createInstance(product,user,order1_id,currentState.CREATED);
-        await ctx.orderList.addOrder(order);
+        let newOrder = Order.createInstance(product,user,order1_id,1);
+        await ctx.orderList.addOrder(newOrder);
         return order.toBuffer();
 
     }
